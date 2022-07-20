@@ -1,0 +1,57 @@
+pipeline {    
+    options { skipDefaultCheckout() }
+    agent {label 'jenkinsmaster'} 
+    
+     tools {
+        nodejs 'npm'
+    }
+    
+    
+    
+ 
+    
+    
+    stages { 
+     stage('SCM') {
+            steps {
+                git  branch: 'main', url: 'https://github.com/AhmedRomdhani16/PASS2'
+            }
+        }
+        
+        stage('SonarQube Scan Code Quality') {
+            steps {
+                script {
+                    scannerHome = tool 'Sonar';
+                }
+                withSonarQubeEnv(installationName:'Sonar') {
+                  sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=web -Dsonar.analysis.mode=publish -Dsonar.sources=ecom-site/src -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info -Dsonar.exclusions=node_modules/*,**/*.spec.ts"
+                }
+            }
+        }
+        
+         stage('Build Jar') {
+            steps {
+                sh 'cd ecomsitespring'
+                sh 'mvn -f ecomsitespring package'
+            }
+        }
+        
+        
+   
+   stage(' SonarQube analysis') {
+            steps {
+            script {
+                    scannerHome = tool 'Sonar' ;
+                }
+   
+                withSonarQubeEnv(installationName:'Sonar') {
+                  
+                        
+                        sh ' mvn -f ecomsitespring sonar:sonar -Dsonar.projectKey=spring '
+                    
+                }
+            }
+        }
+        
+        }
+        }
